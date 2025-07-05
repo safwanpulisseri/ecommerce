@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ecommerce/feature/cart/bloc/bloc/cart_bloc.dart';
+import 'package:ecommerce/feature/favourite/bloc/bloc/favorite_bloc.dart';
 import 'package:ecommerce/feature/home/data/model/product_model.dart';
 
 class ProductDetailsPage extends StatefulWidget {
@@ -31,18 +32,51 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           },
         ),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.favorite_border,
-              color: Colors.black,
-              size: 24,
-            ),
-            onPressed: () {
-              // Toggle favorite
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Added to favorites'),
+          // Favorite Icon
+          BlocBuilder<FavoriteBloc, FavoriteState>(
+            builder: (context, state) {
+              bool isFavorite = false;
+              if (state is FavoriteLoaded) {
+                isFavorite = state.favoriteProducts.any(
+                  (fav) => fav.id == (widget.product['id'] ?? 0),
+                );
+              }
+
+              return IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : Colors.black,
+                  size: 24,
                 ),
+                onPressed: () {
+                  final productModel = ProductModel(
+                    id: widget.product['id'] ?? 0,
+                    title: widget.product['title'] ??
+                        widget.product['name'] ??
+                        'Product',
+                    price: (widget.product['price'] ?? 0.0).toDouble(),
+                    description: widget.product['description'] ?? '',
+                    category: widget.product['category'] ?? '',
+                    image: widget.product['image'] ?? '',
+                    rating: widget.product['rating'] != null
+                        ? Rating.fromMap(widget.product['rating'])
+                        : null,
+                  );
+
+                  context.read<FavoriteBloc>().add(
+                        ToggleFavoriteEvent(product: productModel),
+                      );
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(isFavorite
+                          ? 'Removed from favorites'
+                          : 'Added to favorites'),
+                      backgroundColor:
+                          isFavorite ? Colors.orange : Colors.green,
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -248,6 +282,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                           context.read<CartBloc>().add(
                                 AddToCartEvent(product: productModel),
+                              );
+
+                          // Remove from favorites when added to cart
+                          context.read<FavoriteBloc>().add(
+                                RemoveFromFavoritesEvent(
+                                    productId: productModel.id),
                               );
 
                           ScaffoldMessenger.of(context).showSnackBar(

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ecommerce/feature/product_detail/page/view/product_details.dart';
+import 'package:ecommerce/feature/favourite/bloc/bloc/favorite_bloc.dart';
+import 'package:ecommerce/feature/home/data/model/product_model.dart';
 
 class FavouritePage extends StatefulWidget {
   const FavouritePage({super.key});
@@ -9,48 +12,25 @@ class FavouritePage extends StatefulWidget {
 }
 
 class _FavouritePageState extends State<FavouritePage> {
-  final List<Map<String, dynamic>> favoriteProducts = [
-    {
-      'id': 1,
-      'name': 'Cozy Knit Sweater',
-      'price': 49.99,
-      'category': 'Clothing',
-      'image': 'assets/images/cozy_sweater.png',
-      'color': const Color(0xFFF5F5F5),
-    },
-    {
-      'id': 2,
-      'name': 'Classic Leather Boots',
-      'price': 129.99,
-      'category': 'Shoes',
-      'image': 'assets/images/leather_boots.png',
-      'color': const Color(0xFF2C2C2C),
-    },
-    {
-      'id': 3,
-      'name': 'Vintage Denim Jacket',
-      'price': 79.99,
-      'category': 'Clothing',
-      'image': 'assets/images/denim_jacket.png',
-      'color': const Color(0xFFE8F4FD),
-    },
-    {
-      'id': 4,
-      'name': 'Silk Scarf',
-      'price': 39.99,
-      'category': 'Accessories',
-      'image': 'assets/images/silk_scarf.png',
-      'color': const Color(0xFFF0F8F0),
-    },
-    {
-      'id': 5,
-      'name': 'Minimalist Watch',
-      'price': 199.99,
-      'category': 'Accessories',
-      'image': 'assets/images/watch.png',
-      'color': const Color(0xFF2C2C2C),
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Load favorites when page initializes
+    context.read<FavoriteBloc>().add(const LoadFavoritesEvent());
+  }
+
+  Map<String, dynamic> convertProductToMap(ProductModel product) {
+    return {
+      'id': product.id,
+      'title': product.title,
+      'name': product.title,
+      'price': product.price,
+      'category': product.category,
+      'image': product.image,
+      'description': product.description,
+      'rating': product.rating?.toMap(),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,43 +49,172 @@ class _FavouritePageState extends State<FavouritePage> {
           ),
         ),
         centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Favorites Grid
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: favoriteProducts.length,
-                itemBuilder: (context, index) {
-                  final product = favoriteProducts[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProductDetailsPage(product: product),
-                        ),
-                      );
-                    },
-                    child: FavoriteProductCard(product: product),
-                  );
-                },
-              ),
-            ],
+        actions: [
+          BlocBuilder<FavoriteBloc, FavoriteState>(
+            builder: (context, state) {
+              if (state is FavoriteLoaded &&
+                  state.favoriteProducts.isNotEmpty) {
+                return TextButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Clear All Favorites'),
+                          content: const Text(
+                              'Are you sure you want to remove all items from favorites?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                context
+                                    .read<FavoriteBloc>()
+                                    .add(const ClearAllFavoritesEvent());
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('All favorites cleared'),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
+                              },
+                              child: const Text('Clear All',
+                                  style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: const Text(
+                    'Clear All',
+                    style: TextStyle(
+                        color: Colors.red, fontWeight: FontWeight.w600),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
-        ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: BlocBuilder<FavoriteBloc, FavoriteState>(
+        builder: (context, state) {
+          if (state is FavoriteLoaded) {
+            if (state.favoriteProducts.isEmpty) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.favorite_border,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'No favorites yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Add items to favorites by tapping the heart icon',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Favorites Grid
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.7,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: state.favoriteProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = state.favoriteProducts[index];
+                        final productMap = convertProductToMap(product);
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ProductDetailsPage(product: productMap),
+                              ),
+                            );
+                          },
+                          child: FavoriteProductCard(
+                            product: productMap,
+                            productModel: product,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else if (state is FavoriteError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error: ${state.message}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      context
+                          .read<FavoriteBloc>()
+                          .add(const LoadFavoritesEvent());
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
       ),
     );
   }
@@ -113,8 +222,13 @@ class _FavouritePageState extends State<FavouritePage> {
 
 class FavoriteProductCard extends StatelessWidget {
   final Map<String, dynamic> product;
+  final ProductModel productModel;
 
-  const FavoriteProductCard({super.key, required this.product});
+  const FavoriteProductCard({
+    super.key,
+    required this.product,
+    required this.productModel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -139,32 +253,99 @@ class FavoriteProductCard extends StatelessWidget {
             flex: 3,
             child: Container(
               width: double.infinity,
-              decoration: BoxDecoration(
-                color: product['color'],
-                borderRadius: const BorderRadius.only(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                 ),
               ),
               child: Stack(
                 children: [
-                  Center(
-                    child: _buildProductDisplay(product),
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                    child: product['image'] != null &&
+                            product['image'].isNotEmpty
+                        ? Image.network(
+                            product['image'],
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes !=
+                                          null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(
+                                Icons.image_not_supported,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                   ),
-                  // Heart icon for favorites
+                  // Heart icon for favorites (remove functionality)
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.favorite,
-                        color: Colors.red,
-                        size: 16,
+                    child: GestureDetector(
+                      onTap: () {
+                        context.read<FavoriteBloc>().add(
+                              RemoveFromFavoritesEvent(
+                                  productId: productModel.id),
+                            );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                '${productModel.title} removed from favorites'),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.favorite,
+                          color: Colors.red,
+                          size: 16,
+                        ),
                       ),
                     ),
                   ),
@@ -177,25 +358,28 @@ class FavoriteProductCard extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    product['name'],
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                  Flexible(
+                    child: Text(
+                      product['title'] ?? product['name'] ?? '',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 4),
                   Text(
-                    '\₹${product['price'].toStringAsFixed(2)}',
+                    '₹${(product['price'] ?? 0.0).toStringAsFixed(2)}',
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       color: Colors.grey,
                       fontWeight: FontWeight.w500,
                     ),
@@ -207,100 +391,5 @@ class FavoriteProductCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Widget _buildProductDisplay(Map<String, dynamic> product) {
-    switch (product['name']) {
-      case 'Cozy Knit Sweater':
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 60,
-              height: 80,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8D5B7),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.checkroom,
-                size: 40,
-                color: Colors.brown,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                color: Color(0xFFD4A574),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-        );
-      case 'Classic Leather Boots':
-        return Container(
-          width: 80,
-          height: 60,
-          decoration: BoxDecoration(
-            color: const Color(0xFFB08968),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.work_outline,
-            size: 40,
-            color: Colors.white,
-          ),
-        );
-      case 'Vintage Denim Jacket':
-        return Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            color: const Color(0xFF4A90E2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(
-            Icons.checkroom,
-            size: 40,
-            color: Colors.white,
-          ),
-        );
-      case 'Silk Scarf':
-        return Container(
-          width: 80,
-          height: 40,
-          decoration: BoxDecoration(
-            color: const Color(0xFF9CAF88),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(
-            Icons.brush,
-            size: 30,
-            color: Colors.white,
-          ),
-        );
-      case 'Minimalist Watch':
-        return Container(
-          width: 60,
-          height: 60,
-          decoration: const BoxDecoration(
-            color: Color(0xFF555555),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.watch,
-            size: 35,
-            color: Colors.white,
-          ),
-        );
-      default:
-        return const Icon(
-          Icons.favorite,
-          size: 50,
-          color: Colors.red,
-        );
-    }
   }
 }

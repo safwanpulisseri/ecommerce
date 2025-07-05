@@ -1,6 +1,8 @@
 import 'package:ecommerce/app_view.dart';
 import 'package:ecommerce/feature/cart/bloc/bloc/cart_bloc.dart';
 import 'package:ecommerce/feature/cart/data/repository/local/cart_repository.dart';
+import 'package:ecommerce/feature/favourite/bloc/bloc/favorite_bloc.dart';
+import 'package:ecommerce/feature/favourite/data/repository/local/favourite_repository.dart';
 import 'package:ecommerce/feature/home/bloc/bloc/product_bloc.dart';
 import 'package:ecommerce/feature/home/data/repository/product_repo.dart';
 import 'package:ecommerce/feature/home/data/service/remote/product_remote.dart';
@@ -21,6 +23,9 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(
           create: (context) => CartRepository(),
         ),
+        RepositoryProvider(
+          create: (context) => FavoriteRepository(),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -32,6 +37,10 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (context) => CartBloc(context.read<CartRepository>()),
+          ),
+          BlocProvider(
+            create: (context) =>
+                FavoriteBloc(context.read<FavoriteRepository>()),
           ),
         ],
         child: const MyAppView(),

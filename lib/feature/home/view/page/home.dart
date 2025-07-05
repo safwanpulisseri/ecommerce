@@ -5,6 +5,7 @@ import 'package:ecommerce/feature/product_detail/page/view/product_details.dart'
 import 'package:ecommerce/feature/home/bloc/bloc/product_bloc.dart';
 import 'package:ecommerce/feature/home/data/model/product_model.dart';
 import 'package:ecommerce/feature/cart/bloc/bloc/cart_bloc.dart';
+import 'package:ecommerce/feature/favourite/bloc/bloc/favorite_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -40,6 +41,7 @@ class _HomePageViewState extends State<HomePageView> {
     // Trigger initial data fetch
     context.read<ProductBloc>().add(const FetchProductsEvent());
     context.read<CartBloc>().add(const LoadCartEvent());
+    context.read<FavoriteBloc>().add(const LoadFavoritesEvent());
   }
 
   List<ProductModel> getFilteredProducts(List<ProductModel> products) {
@@ -387,7 +389,10 @@ class _HomePageViewState extends State<HomePageView> {
                                     ),
                                   );
                                 },
-                                child: ProductCard(product: productMap),
+                                child: ProductCard(
+                                  product: productMap,
+                                  productModel: product,
+                                ),
                               );
                             },
                           ),
@@ -405,8 +410,13 @@ class _HomePageViewState extends State<HomePageView> {
 
 class ProductCard extends StatelessWidget {
   final Map<String, dynamic> product;
+  final ProductModel productModel;
 
-  const ProductCard({super.key, required this.product});
+  const ProductCard({
+    super.key,
+    required this.product,
+    required this.productModel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -438,41 +448,93 @@ class ProductCard extends StatelessWidget {
                   topRight: Radius.circular(16),
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-                child: product['image'] != null && product['image'].isNotEmpty
-                    ? Image.network(
-                        product['image'],
-                        fit: BoxFit.contain,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                    child: product['image'] != null &&
+                            product['image'].isNotEmpty
+                        ? Image.network(
+                            product['image'],
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes !=
+                                          null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: product['color'],
+                                child: Center(
+                                  child: _buildProductIcon(product['category']),
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
                             color: product['color'],
                             child: Center(
                               child: _buildProductIcon(product['category']),
                             ),
+                          ),
+                  ),
+                  // Favorite Icon
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: BlocBuilder<FavoriteBloc, FavoriteState>(
+                      builder: (context, state) {
+                        bool isFavorite = false;
+                        if (state is FavoriteLoaded) {
+                          isFavorite = state.favoriteProducts.any(
+                            (fav) => fav.id == productModel.id,
                           );
-                        },
-                      )
-                    : Container(
-                        color: product['color'],
-                        child: Center(
-                          child: _buildProductIcon(product['category']),
-                        ),
-                      ),
+                        }
+
+                        return GestureDetector(
+                          onTap: () {
+                            context.read<FavoriteBloc>().add(
+                                  ToggleFavoriteEvent(product: productModel),
+                                );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.9),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  spreadRadius: 1,
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: isFavorite ? Colors.red : Colors.grey,
+                              size: 18,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
