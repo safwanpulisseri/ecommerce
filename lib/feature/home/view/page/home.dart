@@ -6,6 +6,7 @@ import 'package:ecommerce/feature/home/bloc/bloc/product_bloc.dart';
 import 'package:ecommerce/feature/home/data/model/product_model.dart';
 import 'package:ecommerce/feature/cart/bloc/bloc/cart_bloc.dart';
 import 'package:ecommerce/feature/favourite/bloc/bloc/favorite_bloc.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -27,6 +28,7 @@ class _HomePageViewState extends State<HomePageView> {
   String selectedCategory = 'All';
   String searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<String> categories = [
     'All',
     'men\'s clothing',
@@ -38,10 +40,25 @@ class _HomePageViewState extends State<HomePageView> {
   @override
   void initState() {
     super.initState();
-    // Trigger initial data fetch
-    context.read<ProductBloc>().add(const FetchProductsEvent());
+    // Trigger initial data fetch with pagination
+    context.read<ProductBloc>().add(const LoadInitialProductsEvent());
     context.read<CartBloc>().add(const LoadCartEvent());
     context.read<FavoriteBloc>().add(const LoadFavoritesEvent());
+
+    // Add scroll listener for pagination
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      final currentState = context.read<ProductBloc>().state;
+      if (currentState is ProductLoaded &&
+          currentState.hasMore &&
+          !currentState.isLoadingMore) {
+        context.read<ProductBloc>().add(const LoadMoreProductsEvent());
+      }
+    }
   }
 
   List<ProductModel> getFilteredProducts(List<ProductModel> products) {
@@ -74,6 +91,7 @@ class _HomePageViewState extends State<HomePageView> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -182,9 +200,7 @@ class _HomePageViewState extends State<HomePageView> {
       body: BlocBuilder<ProductBloc, ProductState>(
         builder: (context, state) {
           if (state is ProductLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const ShimmerLoadingWidget();
           } else if (state is ProductError) {
             return Center(
               child: Column(
@@ -209,7 +225,7 @@ class _HomePageViewState extends State<HomePageView> {
                     onPressed: () {
                       context
                           .read<ProductBloc>()
-                          .add(const FetchProductsEvent());
+                          .add(const LoadInitialProductsEvent());
                     },
                     child: const Text('Retry'),
                   ),
@@ -219,6 +235,7 @@ class _HomePageViewState extends State<HomePageView> {
           } else if (state is ProductLoaded) {
             final filteredProducts = getFilteredProducts(state.products);
             return SingleChildScrollView(
+              controller: _scrollController,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -396,6 +413,15 @@ class _HomePageViewState extends State<HomePageView> {
                               );
                             },
                           ),
+
+                    // Loading more indicator
+                    if (state.isLoadingMore) ...[
+                      const SizedBox(height: 16),
+                      const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ],
                 ),
               ),
@@ -403,6 +429,156 @@ class _HomePageViewState extends State<HomePageView> {
           }
           return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+}
+
+// Shimmer Loading Widget
+class ShimmerLoadingWidget extends StatelessWidget {
+  const ShimmerLoadingWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Shimmer Search Bar
+            Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Shimmer Category Filters
+            SizedBox(
+              height: 50,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: 5,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12.0),
+                    child: Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      child: Container(
+                        width: 80,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Shimmer Products Grid
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.7,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: 10,
+              itemBuilder: (context, index) {
+                return const ShimmerProductCard();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Shimmer Product Card
+class ShimmerProductCard extends StatelessWidget {
+  const ShimmerProductCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image container
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+            // Details container
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 14,
+                      width: double.infinity,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 14,
+                      width: 100,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 12,
+                      width: 60,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

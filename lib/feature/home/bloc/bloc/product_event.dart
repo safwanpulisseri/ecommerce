@@ -10,3 +10,11 @@ sealed class ProductEvent extends Equatable {
 class FetchProductsEvent extends ProductEvent {
   const FetchProductsEvent();
 }
+
+class LoadInitialProductsEvent extends ProductEvent {
+  const LoadInitialProductsEvent();
+}
+
+class LoadMoreProductsEvent extends ProductEvent {
+  const LoadMoreProductsEvent();
+}
