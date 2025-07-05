@@ -34,4 +34,29 @@ class ProductRepo {
       throw Exception('Failed to fetch products');
     }
   }
+
+  Future<List<ProductModel>> fetchAllProducts() async {
+    try {
+      var response = await _productRemoteService.fetchAllProducts();
+
+      if (response.statusCode == 200) {
+        log('All products fetched successfully');
+
+        final List<dynamic> productsData = response.data as List<dynamic>;
+
+        List<ProductModel> products = productsData
+            .map((productJson) =>
+                ProductModel.fromMap(productJson as Map<String, dynamic>))
+            .toList();
+
+        return products;
+      } else {
+        log('Failed to fetch all products with status code: ${response.statusCode}');
+        throw Exception('Failed to fetch all products');
+      }
+    } catch (e) {
+      log('Error fetching all products: $e');
+      throw Exception('Failed to fetch all products');
+    }
+  }
 }

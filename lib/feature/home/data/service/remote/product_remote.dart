@@ -19,4 +19,17 @@ class ProductRemoteService {
       throw Exception('Failed to fetch products');
     }
   }
+
+  //Fetch all products from Fake Store API (for client-side pagination)
+  Future<Response<dynamic>> fetchAllProducts() async {
+    log("Fetching all products from API");
+    try {
+      var response = await dio.get("${_fakeStoreApi}products");
+      log("All products fetched successfully");
+      return response;
+    } catch (e) {
+      log('Error fetching all products: $e');
+      throw Exception('Failed to fetch all products');
+    }
+  }
 }

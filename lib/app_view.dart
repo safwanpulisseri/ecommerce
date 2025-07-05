@@ -1,4 +1,5 @@
-import 'package:ecommerce/feature/navbar/page/navbar.dart';
+import 'package:ecommerce/core/theme/app_theme.dart';
+import 'package:ecommerce/feature/splash/view/splash_screen.dart';
 import 'package:flutter/material.dart';
 
 class MyAppView extends StatelessWidget {
@@ -7,12 +8,9 @@ class MyAppView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ecommerce App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      home: const NavbarPage(),
+      title: 'Shop App',
+      theme: AppTheme.theme,
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

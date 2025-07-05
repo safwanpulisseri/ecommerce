@@ -264,7 +264,7 @@ class _CartPageState extends State<CartPage> {
                             context.read<CartBloc>().add(const CheckoutEvent());
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4A90E2),
+                            backgroundColor: Colors.black,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(

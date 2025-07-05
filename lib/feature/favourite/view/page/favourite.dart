@@ -15,8 +15,6 @@ class _FavouritePageState extends State<FavouritePage> {
   @override
   void initState() {
     super.initState();
-    // Load favorites when page initializes
-    context.read<FavoriteBloc>().add(const LoadFavoritesEvent());
   }
 
   Map<String, dynamic> convertProductToMap(ProductModel product) {
