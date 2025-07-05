@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ecommerce/feature/cart/bloc/bloc/cart_bloc.dart';
+import 'package:ecommerce/feature/home/data/model/product_model.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -179,10 +182,28 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: () {
+                          final productModel = ProductModel(
+                            id: widget.product['id'] ?? 0,
+                            title: widget.product['title'] ??
+                                widget.product['name'] ??
+                                'Product',
+                            price: (widget.product['price'] ?? 0.0).toDouble(),
+                            description: widget.product['description'] ?? '',
+                            category: widget.product['category'] ?? '',
+                            image: widget.product['image'] ?? '',
+                            rating: widget.product['rating'] != null
+                                ? Rating.fromMap(widget.product['rating'])
+                                : null,
+                          );
+
+                          context.read<CartBloc>().add(
+                                AddToCartEvent(product: productModel),
+                              );
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                  '${widget.product['title'] ?? widget.product['name'] ?? 'Product'} added to cart'),
+                              content:
+                                  Text('${productModel.title} added to cart'),
                               backgroundColor: Colors.green,
                             ),
                           );

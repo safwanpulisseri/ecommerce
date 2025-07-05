@@ -4,19 +4,14 @@ import 'package:ecommerce/feature/cart/view/page/cart.dart';
 import 'package:ecommerce/feature/product_detail/page/view/product_details.dart';
 import 'package:ecommerce/feature/home/bloc/bloc/product_bloc.dart';
 import 'package:ecommerce/feature/home/data/model/product_model.dart';
-import 'package:ecommerce/feature/home/data/repository/product_repo.dart';
-import 'package:ecommerce/feature/home/data/service/remote/product_remote.dart';
+import 'package:ecommerce/feature/cart/bloc/bloc/cart_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ProductBloc(ProductRepo(ProductRemoteService()))
-        ..add(const FetchProductsEvent()),
-      child: const HomePageView(),
-    );
+    return const HomePageView();
   }
 }
 
@@ -38,6 +33,14 @@ class _HomePageViewState extends State<HomePageView> {
     'jewelery',
     'electronics'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Trigger initial data fetch
+    context.read<ProductBloc>().add(const FetchProductsEvent());
+    context.read<CartBloc>().add(const LoadCartEvent());
+  }
 
   List<ProductModel> getFilteredProducts(List<ProductModel> products) {
     List<ProductModel> filteredProducts = products;

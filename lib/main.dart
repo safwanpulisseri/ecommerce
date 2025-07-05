@@ -1,24 +1,19 @@
+import 'package:ecommerce/app.dart';
 import 'package:flutter/material.dart';
-import 'package:ecommerce/feature/navbar/page/navbar.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:ecommerce/feature/home/data/model/product_model.dart';
+import 'package:ecommerce/feature/cart/data/model/cart_model.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await Hive.initFlutter();
+
+  // Register Hive adapters
+  Hive.registerAdapter(RatingAdapter());
+  Hive.registerAdapter(ProductModelAdapter());
+  Hive.registerAdapter(CartModelAdapter());
+
   runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ecommerce App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      home: const NavbarPage(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
 }
