@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ecommerce/feature/cart/bloc/bloc/cart_bloc.dart';
 import 'package:ecommerce/feature/favourite/bloc/bloc/favorite_bloc.dart';
 import 'package:ecommerce/feature/home/data/model/product_model.dart';
+import 'package:ecommerce/feature/navbar/bloc/bloc/navbar_bloc.dart';
+import 'package:ecommerce/core/theme/color/app_color.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -17,14 +19,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColor.surfaceVariant,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.surface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back,
-            color: Colors.black,
+            color: AppColor.textPrimary,
             size: 24,
           ),
           onPressed: () {
@@ -45,7 +47,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               return IconButton(
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite ? Colors.red : Colors.black,
+                  color: isFavorite ? AppColor.favorite : AppColor.textPrimary,
                   size: 24,
                 ),
                 onPressed: () {
@@ -73,7 +75,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           ? 'Removed from favorites'
                           : 'Added to favorites'),
                       backgroundColor:
-                          isFavorite ? Colors.orange : Colors.green,
+                          isFavorite ? AppColor.warning : AppColor.success,
                     ),
                   );
                 },
@@ -93,11 +95,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   IconButton(
                     icon: const Icon(
                       Icons.shopping_cart_outlined,
-                      color: Colors.black,
+                      color: AppColor.textPrimary,
                       size: 24,
                     ),
                     onPressed: () {
+                      // Navigate back to main app and switch to cart tab
                       Navigator.pop(context);
+                      context.read<NavbarBloc>().add(const ChangeTabEvent(2));
                     },
                   ),
                   if (cartCount > 0)
@@ -107,9 +111,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       child: Container(
                         padding: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
-                          color: Colors.red,
+                          color: AppColor.error,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white, width: 1),
+                          border: Border.all(color: AppColor.surface, width: 1),
                         ),
                         constraints: const BoxConstraints(
                           minWidth: 18,
@@ -118,7 +122,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         child: Text(
                           cartCount > 99 ? '99+' : cartCount.toString(),
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColor.surface,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -140,22 +144,15 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             Container(
               width: double.infinity,
               height: 400,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFFE8B878),
-                    const Color(0xFFD4A574),
-                  ],
-                ),
+              decoration: const BoxDecoration(
+                color: AppColor.surface,
               ),
               child: Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Center(
                   child: Container(
-                    height: 300,
-                    width: 300,
+                    height: double.infinity,
+                    width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -299,7 +296,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4A90E2),
+                          backgroundColor: Colors.black,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(

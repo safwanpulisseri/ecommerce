@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ecommerce/feature/cart/view/page/cart.dart';
+
 import 'package:ecommerce/feature/product_detail/page/view/product_details.dart';
 import 'package:ecommerce/feature/home/bloc/bloc/product_bloc.dart';
 import 'package:ecommerce/feature/home/data/model/product_model.dart';
 import 'package:ecommerce/feature/cart/bloc/bloc/cart_bloc.dart';
 import 'package:ecommerce/feature/favourite/bloc/bloc/favorite_bloc.dart';
+import 'package:ecommerce/feature/navbar/bloc/bloc/navbar_bloc.dart';
+import 'package:ecommerce/core/theme/color/app_color.dart';
 import 'package:shimmer/shimmer.dart';
 
 class HomePage extends StatelessWidget {
@@ -40,11 +42,6 @@ class _HomePageViewState extends State<HomePageView> {
   @override
   void initState() {
     super.initState();
-    // Trigger initial data fetch with pagination
-    context.read<ProductBloc>().add(const LoadInitialProductsEvent());
-    context.read<CartBloc>().add(const LoadCartEvent());
-    context.read<FavoriteBloc>().add(const LoadFavoritesEvent());
-
     // Add scroll listener for pagination
     _scrollController.addListener(_onScroll);
   }
@@ -125,14 +122,14 @@ class _HomePageViewState extends State<HomePageView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColor.surfaceVariant,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.surface,
         elevation: 0,
         title: const Text(
           'Shop',
           style: TextStyle(
-            color: Colors.black,
+            color: AppColor.textPrimary,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -152,16 +149,12 @@ class _HomePageViewState extends State<HomePageView> {
                   IconButton(
                     icon: const Icon(
                       Icons.shopping_cart_outlined,
-                      color: Colors.black,
+                      color: AppColor.textPrimary,
                       size: 28,
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CartPage(),
-                        ),
-                      );
+                      // Switch to cart tab instead of navigating
+                      context.read<NavbarBloc>().add(const ChangeTabEvent(2));
                     },
                   ),
                   if (cartCount > 0)
@@ -171,9 +164,9 @@ class _HomePageViewState extends State<HomePageView> {
                       child: Container(
                         padding: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
-                          color: Colors.red,
+                          color: AppColor.error,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white, width: 1),
+                          border: Border.all(color: AppColor.surface, width: 1),
                         ),
                         constraints: const BoxConstraints(
                           minWidth: 18,
@@ -182,7 +175,7 @@ class _HomePageViewState extends State<HomePageView> {
                         child: Text(
                           cartCount > 99 ? '99+' : cartCount.toString(),
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColor.surface,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -209,14 +202,14 @@ class _HomePageViewState extends State<HomePageView> {
                   const Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.grey,
+                    color: AppColor.textHint,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Error: ${state.message}',
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.grey,
+                      color: AppColor.textSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -244,7 +237,7 @@ class _HomePageViewState extends State<HomePageView> {
                     // Search Bar
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8E8E8),
+                        color: AppColor.surfaceContainer,
                         borderRadius: BorderRadius.circular(25),
                       ),
                       child: TextField(
@@ -257,19 +250,19 @@ class _HomePageViewState extends State<HomePageView> {
                         decoration: InputDecoration(
                           hintText: 'Search products',
                           hintStyle: const TextStyle(
-                            color: Colors.grey,
+                            color: AppColor.textHint,
                             fontSize: 16,
                           ),
                           prefixIcon: const Icon(
                             Icons.search,
-                            color: Colors.grey,
+                            color: AppColor.textHint,
                             size: 24,
                           ),
                           suffixIcon: searchQuery.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(
                                     Icons.clear,
-                                    color: Colors.grey,
+                                    color: AppColor.textHint,
                                     size: 20,
                                   ),
                                   onPressed: () {
@@ -313,8 +306,8 @@ class _HomePageViewState extends State<HomePageView> {
                                     horizontal: 20, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? Colors.black
-                                      : const Color(0xFFE8E8E8),
+                                      ? AppColor.selectedTab
+                                      : AppColor.surfaceContainer,
                                   borderRadius: BorderRadius.circular(25),
                                 ),
                                 child: Center(
@@ -322,8 +315,8 @@ class _HomePageViewState extends State<HomePageView> {
                                     category,
                                     style: TextStyle(
                                       color: isSelected
-                                          ? Colors.white
-                                          : Colors.black,
+                                          ? AppColor.surface
+                                          : AppColor.textPrimary,
                                       fontSize: 16,
                                       fontWeight: isSelected
                                           ? FontWeight.w600
@@ -351,7 +344,7 @@ class _HomePageViewState extends State<HomePageView> {
                                         ? Icons.search_off
                                         : Icons.inventory_2_outlined,
                                     size: 64,
-                                    color: Colors.grey,
+                                    color: AppColor.textHint,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
@@ -362,7 +355,7 @@ class _HomePageViewState extends State<HomePageView> {
                                             : 'No products available',
                                     style: const TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey,
+                                      color: AppColor.textSecondary,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -448,12 +441,12 @@ class ShimmerLoadingWidget extends StatelessWidget {
           children: [
             // Shimmer Search Bar
             Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
+              baseColor: AppColor.shimmerBase,
+              highlightColor: AppColor.shimmerHighlight,
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColor.surface,
                   borderRadius: BorderRadius.circular(25),
                 ),
               ),
@@ -470,13 +463,13 @@ class ShimmerLoadingWidget extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 12.0),
                     child: Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
+                      baseColor: AppColor.shimmerBase,
+                      highlightColor: AppColor.shimmerHighlight,
                       child: Container(
                         width: 80,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColor.surface,
                           borderRadius: BorderRadius.circular(25),
                         ),
                       ),
@@ -516,15 +509,15 @@ class ShimmerProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: AppColor.shimmerBase,
+      highlightColor: AppColor.shimmerHighlight,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColor.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: AppColor.shadow,
               spreadRadius: 1,
               blurRadius: 5,
               offset: const Offset(0, 2),
@@ -540,7 +533,7 @@ class ShimmerProductCard extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: AppColor.surface,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(16),
                     topRight: Radius.circular(16),
@@ -559,19 +552,19 @@ class ShimmerProductCard extends StatelessWidget {
                     Container(
                       height: 14,
                       width: double.infinity,
-                      color: Colors.white,
+                      color: AppColor.surface,
                     ),
                     const SizedBox(height: 4),
                     Container(
                       height: 14,
                       width: 100,
-                      color: Colors.white,
+                      color: AppColor.surface,
                     ),
                     const SizedBox(height: 8),
                     Container(
                       height: 12,
                       width: 60,
-                      color: Colors.white,
+                      color: AppColor.surface,
                     ),
                   ],
                 ),
@@ -598,11 +591,11 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColor.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: AppColor.shadow,
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 2),
@@ -618,7 +611,7 @@ class ProductCard extends StatelessWidget {
             child: Container(
               width: double.infinity,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: AppColor.surface,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -687,11 +680,11 @@ class ProductCard extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
+                              color: AppColor.surface.withOpacity(0.9),
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: AppColor.shadow,
                                   spreadRadius: 1,
                                   blurRadius: 3,
                                   offset: const Offset(0, 1),
@@ -702,7 +695,9 @@ class ProductCard extends StatelessWidget {
                               isFavorite
                                   ? Icons.favorite
                                   : Icons.favorite_border,
-                              color: isFavorite ? Colors.red : Colors.grey,
+                              color: isFavorite
+                                  ? AppColor.favorite
+                                  : AppColor.unselectedTab,
                               size: 18,
                             ),
                           ),
@@ -730,7 +725,7 @@ class ProductCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                        color: AppColor.textPrimary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -743,7 +738,7 @@ class ProductCard extends StatelessWidget {
                       '₹${(product['price'] ?? 0.0).toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.grey,
+                        color: AppColor.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -764,25 +759,25 @@ class ProductCard extends StatelessWidget {
         return const Icon(
           Icons.checkroom,
           size: 80,
-          color: Colors.black54,
+          color: AppColor.textSecondary,
         );
       case 'jewelery':
         return const Icon(
           Icons.diamond,
           size: 80,
-          color: Colors.black54,
+          color: AppColor.textSecondary,
         );
       case 'electronics':
         return const Icon(
           Icons.devices,
           size: 80,
-          color: Colors.white,
+          color: AppColor.surface,
         );
       default:
         return const Icon(
           Icons.shopping_bag_outlined,
           size: 80,
-          color: Colors.black54,
+          color: AppColor.textSecondary,
         );
     }
   }
