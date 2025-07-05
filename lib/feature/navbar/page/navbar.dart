@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ecommerce/feature/home/view/page/home.dart';
 import 'package:ecommerce/feature/favourite/view/page/favourite.dart';
+import 'package:ecommerce/feature/cart/view/page/cart.dart';
+import 'package:ecommerce/feature/profile/view/page/profile.dart';
 import 'package:ecommerce/feature/navbar/bloc/bloc/navbar_bloc.dart';
 
 class NavbarPage extends StatelessWidget {
@@ -22,6 +24,8 @@ class NavbarView extends StatelessWidget {
   static const List<Widget> _pages = [
     HomePage(),
     FavouritePage(),
+    CartPage(),
+    ProfilePage(),
   ];
 
   @override
@@ -60,6 +64,16 @@ class NavbarView extends StatelessWidget {
                 icon: Icon(Icons.favorite_border),
                 activeIcon: Icon(Icons.favorite),
                 label: 'Favorites',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart_outlined),
+                activeIcon: Icon(Icons.shopping_cart),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'Profile',
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecommerce/feature/product_detail/page/view/product_details.dart';
 
 class FavouritePage extends StatefulWidget {
   const FavouritePage({super.key});
@@ -88,7 +89,18 @@ class _FavouritePageState extends State<FavouritePage> {
                 itemCount: favoriteProducts.length,
                 itemBuilder: (context, index) {
                   final product = favoriteProducts[index];
-                  return FavoriteProductCard(product: product);
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ProductDetailsPage(product: product),
+                        ),
+                      );
+                    },
+                    child: FavoriteProductCard(product: product),
+                  );
                 },
               ),
             ],
@@ -181,7 +193,7 @@ class FavoriteProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    '\$${product['price'].toStringAsFixed(2)}',
+                    '\₹${product['price'].toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
